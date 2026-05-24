@@ -141,8 +141,21 @@ tpy_X = true_x.item()
 tpy_B = true_b.item()
 
 
-def game_process():
-    
+while running:
+    # poll for events
+    # pygame.QUIT event means the user clicked X to close your window
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    running = False
+
+    dt = clock.tick(120) # limits FPS to 60
+    #the first epoch the game will render the first line 
+    #after the line is rendered go to the next epoch
+
     #where the game renders
     for epoch in range(epoch):
         #this function mimics the actual function without the noise lol  forward propagation
@@ -166,22 +179,7 @@ def game_process():
             # flip() the display to put your work on screen
             pygame.display.flip()
     
-
-while running:
-    # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    dt = clock.tick(120) # limits FPS to 60
-    #the first epoch the game will render the first line 
-    #after the line is rendered go to the next epoch
-    t1 = threading.Thread(target=game_process)
-    for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    running = False
+    
 
 
 

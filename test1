@@ -70,7 +70,7 @@ circle2 = make_circle("blue",3)
 
 def draw_text(screen,text,pos = (0,0)):
     font = pygame.font.SysFont("Arial", 18)
-    test = pygame.font.Font.render(font,f"Cordinate X: {text:.2f}", True, "white")
+    test = pygame.font.Font.render(font,text, True, "white")
     test_rect = test.get_rect()
     test_rect.center = pos
     screen.blit(test, test_rect)

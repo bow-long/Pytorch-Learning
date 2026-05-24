@@ -1,0 +1,29 @@
+
+import pygame
+import time
+
+
+class camera:
+    
+    def __init__(self,screen):
+        self.screen = screen
+        self.scaled_screen = screen
+        self.magnify = 1
+    def zoom_in():
+        magnify += 0.1
+        time.sleep(0.2) 
+    def zoom_out():
+        magnify -= 0.1
+        time.sleep(0.2) 
+    def move(input):
+        keystate = pygame.key.get_pressed()
+        if input == keystate[pygame.K_LEFT]:
+            pass
+        if input == keystate[pygame.K_RIGHT]:
+            pass
+        if input == keystate[pygame.K_UP]:
+            pass
+        if input == keystate[pygame.K_DOWN]:
+            pass
+        else:
+            pass
