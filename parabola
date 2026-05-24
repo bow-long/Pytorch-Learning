@@ -1,0 +1,183 @@
+import torch
+import numpy as np
+import pygame
+
+
+# pygame setup
+pygame.init()
+size = width, height = 1280, 720
+screen = pygame.display.set_mode(size)
+clock = pygame.time.Clock()
+running = True
+font = pygame.font.SysFont("Arial", 24)
+
+#number of points 
+N = 50
+
+#number of channel
+dn_in = 1
+dn_out = 1
+
+#true values
+true_x = torch.tensor([[28.324]])
+true_b = torch.tensor([4.42])
+data = torch.randn(N,dn_in)
+true_y = torch.sin(data) @ true_x + true_b + torch.randn(N,dn_out) * 0.1
+
+X = torch.randn(dn_in,dn_out,requires_grad=True)
+B = torch.randn(1,requires_grad=True)
+
+tpy_X : float
+tpy_B : float
+py_X  : float
+py_B  : float
+
+
+# starting points
+a = 0
+b = height
+dt : float
+
+#function that calculates next poisition
+# will draw a function accurately and at the bottom left like normal graphs
+#acts as a function translator to pygame
+def calculatepos(a,b,color,dt):
+   
+    a += dt * 0.001 # is input for the function
+
+    #actual function is here
+    if color == "blue":
+        b = np.sin(a)*py_X + py_B
+    else:
+        b = np.sin(a)*tpy_X +tpy_B # will allow multiple color to runn different function simultanously
+    b = b.item()
+    b = -b  # reverse a so that the input can stay bottome left and move properly
+  
+    return[a,b+(height/2)]
+
+#simplifies the draw cricle method into one function
+def draw_circle(circle,dt):
+    a = circle.a
+    b = circle.b
+    color = circle.color
+    size = circle.size
+    if a > width or b < 0:
+       pygame.draw.line(screen,color,[0,height],[a,b],1)
+       return 0,height
+    NextPos = calculatepos(a,b,color,dt)   
+    print(NextPos)
+    a,b = NextPos[0],NextPos[1]
+    pygame.draw.circle(screen,color,NextPos,size)
+    return a,b
+
+def draw_text(screen,text,pos = (0,0)):
+    font = pygame.font.SysFont("Arial", 18)
+    test = pygame.font.Font.render(font,text, True, "white")
+    test_rect = test.get_rect()
+    test_rect.center = pos
+    screen.blit(test, test_rect)
+    
+
+#circle object class
+class Circle(object):
+    a = 0.0
+    b = 0.0
+    color = ""
+    size = 0
+
+    # The class "constructor" - It's actually an initializer 
+    def __init__(self, a, b, color,size):
+        self.a = a
+        self.b = b
+        self.color = color
+        self.size = size
+    def reset(self):
+        self.a = 0
+        self.b = 0
+
+def make_circle(color,size):
+    circle = Circle(0,height,color,size)
+    return circle
+
+#initalize the circles 
+circle1 = make_circle("green",3)
+circle2 = make_circle("blue",3)
+
+
+#how much we wanna nudge the data the smaller this is the more accurate
+learningrate =1
+#learning time 
+epoch = 100
+
+        
+# converts tensor to primitive types
+tpy_X = true_x.item()
+tpy_B = true_b.item()
+
+#fjdjajfkldjflsajfl
+
+def step_training(X,B,c1,c2):
+    #this function mimics the actual function without the noise lol  forward propagation
+    y = torch.sin(data)@X + B
+    loss = torch.mean((y - true_y) **2)
+
+    #this is our back propgation
+    loss.backward()
+
+    with torch.no_grad():
+            X -= learningrate * X.grad; B -= learningrate * B.grad
+
+    #resets the gradient
+    X.grad.zero_(); B.grad.zero_()
+    py_X = X.item()
+    py_B = B.item()
+    
+    # 3. Draw (blit) the surface at coordinates (x, y)
+    text1 = f"Predicted Function: sin(x)*{py_X} + {py_B}"
+    text2 = f"True Function: sin(x)*{tpy_X} + {tpy_B}"
+    c1.reset()
+    c2.reset()
+    return text1,text2,py_X,py_B
+
+
+text1 = None
+text2 = None
+
+py_X = X.item()
+py_B = B.item()
+
+magnify = 1
+while running:
+    # poll for events
+    # pygame.QUIT event means the user clicked X to close your window
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    dt = clock.tick(60) # limits FPS to 60
+    #the first epoch the game will render the first line 
+    #after the line is rendered go to the next epoch
+
+
+   
+    keystate = pygame.key.get_pressed()
+    if keystate[pygame.K_SPACE]:
+        text1,text2,py_X,py_B = step_training(X,B,circle1,circle2)
+    if keystate[pygame.K_p]:
+        magnify += 0.5
+    
+    screen.fill("black")
+    draw_text(screen,text1,(width-300,100))
+    draw_text(screen,text2,(width-300,200))
+    circle1.a, circle1.b = draw_circle(circle1,magnify,dt) #one line draw circle function to keep code clean
+    circle2.a, circle2.b = draw_circle(circle2,magnify,dt) #one line draw circle function to keep code clean
+    # flip() the display to put your work on screen
+    pygame.display.flip()
+    
+pygame.quit()
+
+
+
+
+
+
