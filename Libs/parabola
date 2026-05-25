@@ -3,25 +3,12 @@ import torch
 import numpy as np
 import pygame
 import time
-try:
-    import CameraController
-except Exception:
-    # Fallback minimal CameraController if the real module isn't available
-    class _FallbackCamera:
-        def __init__(self, screen):
-            self.screen = screen
-        def move(self, key_getter):
-            # no-op fallback
-            return
 
-    class camera(_FallbackCamera):
-        pass
 # pygame setup
 pygame.init()
 size = width, height = 1280, 720
 magnify = 1
 screen = pygame.display.set_mode(size)
-display = pygame.Surface.subsurface(screen,(int(width))/magnify,(int(height))/magnify)
 clock = pygame.time.Clock()
 running = True
 font = pygame.font.SysFont("Arial", 24)
@@ -161,7 +148,7 @@ text2 = None
 py_X = X.item()
 py_B = B.item()
 
-sc = CameraController.camera(screen)
+
 while running:
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -178,13 +165,13 @@ while running:
     keystate = pygame.key.get_pressed()
     if keystate[pygame.K_SPACE]:
         text1,text2,py_X,py_B = step_training(X,B,circle1,circle2)
-    sc.move(pygame.key.get_just_pressed)
+  
     screen.fill("black")
     # Source - https://stackoverflow.com/a/72654807
     # Posted by Yamm Elnekave
     # Retrieved 2026-05-24, License - CC BY-SA 4.0
 
-    screen.blit(pygame.transform.scale(display, (int(width), int(height))))
+
 
     draw_text(screen,"Controls:\nO to zoom out\nP to zoom in\nSpaceBar to step to next generation",(350,50))
     draw_text(screen,f"ZOOM FACTOR: {magnify}x",(width-350,50))

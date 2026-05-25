@@ -1,0 +1,113 @@
+
+import numpy as np
+import pygame
+
+# pygame setup
+pygame.init()
+size = width, height = 1280, 720
+screen = pygame.display.set_mode(size)
+clock = pygame.time.Clock()
+running = True
+
+
+# starting points
+a = 0
+b = height
+dt : float
+
+#function that calculates next poisition
+# will draw a function accurately and at the bottom left like normal graphs
+#acts as a function translator to pygame
+def calculatepos(a,b,color,dt):
+    
+    a += dt * 0.01 # is input for the function
+    
+    #actual function is here
+    if color == "blue":
+        b = np.sin(a) * 100
+    else:
+        b = np.sin(a)*1 +1 # will allow multiple color to runn different function simultanously
+
+    b = -b  # reverse a so that the input can stay bottome left and move properly
+    b = b.item()
+    return[a,b+(height/2)]
+
+#simplifies the draw cricle method into one function
+def draw_circle(circle,dt):
+    a = circle.a
+    b = circle.b
+    color = circle.color
+    size = circle.size
+    if a > width or b < 0:
+       pygame.draw.line(screen,color,[0,height],[a,b],1)
+       return 0,height
+    NextPos = calculatepos(a,b,color,dt)   
+    print(NextPos)
+    a,b = NextPos[0],NextPos[1]
+    pygame.draw.circle(screen,color,NextPos,size)
+    return a,b
+
+class Circle(object):
+    a = 0.0
+    b = 0.0
+    color = ""
+    size = 0
+
+    # The class "constructor" - It's actually an initializer 
+    def __init__(self, a, b, color,size):
+        self.a = a
+        self.b = b
+        self.color = color
+        self.size = size
+
+def make_circle(color,size):
+    circle = Circle(0,height,color,size)
+    return circle
+#initalize the circles 
+circle1 = make_circle("green",3)
+circle2 = make_circle("blue",3)
+
+
+def draw_text(screen,text,pos = (0,0)):
+    font = pygame.font.SysFont("Arial", 18)
+    test = pygame.font.Font.render(font,text, True, "white")
+    test_rect = test.get_rect()
+    test_rect.center = pos
+    screen.blit(test, test_rect)
+    
+
+
+
+while running:
+    # poll for events
+    # pygame.QUIT event means the user clicked X to close your window
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    running = False
+
+    dt = clock.tick(120) # limits FPS to 60
+    #the first epoch the game will render the first line 
+    #after the line is rendered go to the next epoch
+
+    screen.fill("black")
+    
+    draw_text(screen,circle2.a,(width-300,100))
+    circle2.a, circle2.b = draw_circle(circle2,dt) #one line draw circle function to keep code clean
+    # flip() the display to put your work on screen
+    pygame.display.flip()
+    
+    
+
+
+
+pygame.quit()
+
+
+
+
+
+

@@ -11,7 +11,7 @@
             "request": "launch",
             "module": "main",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}/../.."
+                "PYTHONPATH": "${workspaceFolder}/libs/"
             }
         }
     ]

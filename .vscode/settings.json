@@ -1,5 +1,6 @@
 {
-    python.analysis.extraPaths: [
-        "."
-    ],
+    "python.analysis.extraPaths": ["${workspaceFolder}/libs/"],
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.terminal.activateEnvironment": true
+
 }
