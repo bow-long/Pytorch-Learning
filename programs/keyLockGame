@@ -1,6 +1,7 @@
 
 import numpy as np
 import pygame
+import time
 
 # pygame setup
 pygame.init()
@@ -8,32 +9,33 @@ size = width, height = 1280, 720
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 running = True
-
-
+center = (width/2, height/2)
+global speed; speed : float; speed = 0.0
 # starting points
 a = 0
 b = height
+
 dt : float
 
 #function that calculates next poisition
 # will draw a function accurately and at the bottom left like normal graphs
 #acts as a function translator to pygame
-def calculatepos(a,b,color,dt):
-    
-    a += dt * 0.01 # is input for the function
-    
+def calculatepos(circle,x,dt):
+    x += dt * 0.001
+   
+    a = circle.a
+    b = circle.b
+    color = circle.color
     #actual function is here
-    if color == "blue":
-        b = np.sin(a) * 100
-    else:
-        b = np.sin(a)*1 +1 # will allow multiple color to runn different function simultanously
+    a =  100*np.sin(x)
+    b =  100*np.cos(x)
 
     b = -b  # reverse a so that the input can stay bottome left and move properly
-    b = b.item()
-    return[a,b+(height/2)]
+    
+    return[a+(width/2),b+(height/2)] , x
 
 #simplifies the draw cricle method into one function
-def draw_circle(circle,dt):
+def draw_circle(circle,x,dt):
     a = circle.a
     b = circle.b
     color = circle.color
@@ -41,13 +43,13 @@ def draw_circle(circle,dt):
     if a > width or b < 0:
        pygame.draw.line(screen,color,[0,height],[a,b],1)
        return 0,height
-    NextPos = calculatepos(a,b,color,dt)   
-    print(NextPos)
+    NextPos,x = calculatepos(circle,x,dt)   
     a,b = NextPos[0],NextPos[1]
     pygame.draw.circle(screen,color,NextPos,size)
-    return a,b
+    #pygame.draw.line(screen,"blue",center,(a,b),5)
+    return a,b,x
 
-class Circle(object):
+class Circle(pygame.sprite.Sprite):
     a = 0.0
     b = 0.0
     color = ""
@@ -55,10 +57,31 @@ class Circle(object):
 
     # The class "constructor" - It's actually an initializer 
     def __init__(self, a, b, color,size):
+        pygame.sprite.Sprite.__init__(self)
         self.a = a
         self.b = b
         self.color = color
         self.size = size
+        self.image = pygame.Surface([size,size])
+        self.rect = self.image.get_rect()
+
+class hitmarker(pygame.sprite.Sprite):
+    a = 0.0
+    b = 0.0
+    color = ""
+    size = 0
+    def __init__(self,a,b,color,size):
+       
+        self.a = a
+        self.b = b
+        self.color = self.color
+        self.size = size
+
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([size,size])
+        self.image.fill(color)
+
+        self.rect = self.image.get_rect()
 
 def make_circle(color,size):
     circle = Circle(0,height,color,size)
@@ -74,29 +97,43 @@ def draw_text(screen,text,pos = (0,0)):
     test_rect = test.get_rect()
     test_rect.center = pos
     screen.blit(test, test_rect)
-    
 
 
 
+
+#game data
+def unlock(circle):
+    circle.color = "green"
+    print("input")
+    return circle
+
+
+
+x = 0.0
+
+box1 = hitmarker(0,0,"red",100)
 while running:
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    running = False
-
-    dt = clock.tick(120) # limits FPS to 60
+   
+    dt = clock.tick(60) # limits FPS to 60
     #the first epoch the game will render the first line 
     #after the line is rendered go to the next epoch
 
     screen.fill("black")
-    
-    draw_text(screen,circle2.a,(width-300,100))
-    circle2.a, circle2.b = draw_circle(circle2,dt) #one line draw circle function to keep code clean
+
+    keystate = pygame.key.get_just_pressed()
+    if keystate[pygame.K_SPACE]:
+       unlock(circle2)
+
+    box1.rect.center = (center)
+    box1.update()
+    draw_text(screen,f"Cordinate x: {circle2.a}",(width-350,100))
+    draw_text(screen,f"Cordinate y: {circle2.b}",(width-350,50))
+    circle2.a, circle2.b, x = draw_circle(circle2,x,dt) #one line draw circle function to keep code clean
     # flip() the display to put your work on screen
     pygame.display.flip()
     
