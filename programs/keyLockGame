@@ -23,8 +23,8 @@ dt : float
 def calculatepos(circle,x,dt):
     x += dt * 0.001
    
-    a = circle.a
-    b = circle.b
+    a = circle.rect.x
+    b = circle.rect.y
     color = circle.color
     #actual function is here
     a =  100*np.sin(x)
@@ -36,8 +36,8 @@ def calculatepos(circle,x,dt):
 
 #simplifies the draw cricle method into one function
 def draw_circle(circle,x,dt):
-    a = circle.a
-    b = circle.b
+    a = circle.rect.x
+    b = circle.rect.y
     color = circle.color
     size = circle.size
     if a > width or b < 0:
@@ -45,51 +45,65 @@ def draw_circle(circle,x,dt):
        return 0,height
     NextPos,x = calculatepos(circle,x,dt)   
     a,b = NextPos[0],NextPos[1]
-    pygame.draw.circle(screen,color,NextPos,size)
+    circle.rect.center = (a,b)
     #pygame.draw.line(screen,"blue",center,(a,b),5)
-    return a,b,x
+    return x
 
 class Circle(pygame.sprite.Sprite):
-    a = 0.0
-    b = 0.0
     color = ""
     size = 0
-
     # The class "constructor" - It's actually an initializer 
-    def __init__(self, a, b, color,size):
-        pygame.sprite.Sprite.__init__(self)
-        self.a = a
-        self.b = b
+    def __init__(self,color,size):
+        super().__init__()
         self.color = color
         self.size = size
+
+
         self.image = pygame.Surface([size,size])
+       
         self.rect = self.image.get_rect()
+
+        pygame.draw.circle(self.image,color,(self.rect.center),size/2)
+        
+      
+      
+       
+        
+
+    def Next_pos(self,x,y):
+        print(self)
+        self.rect.x = x
+        self.rect.y = y
+
+    def update():
+        New_pos()
+        
 
 class hitmarker(pygame.sprite.Sprite):
     a = 0.0
     b = 0.0
     color = ""
     size = 0
-    def __init__(self,a,b,color,size):
-       
-        self.a = a
-        self.b = b
-        self.color = self.color
+    def __init__(self,color,height,width):
+        super().__init__()
+        self.color = color
         self.size = size
 
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface([size,size])
+       
+        self.image = pygame.Surface([width, height])
         self.image.fill(color)
+
+      
 
         self.rect = self.image.get_rect()
 
 def make_circle(color,size):
-    circle = Circle(0,height,color,size)
+    circle = Circle(color,size)
     return circle
+
 #initalize the circles 
 circle1 = make_circle("green",3)
-circle2 = make_circle("blue",3)
-
+circle2 = make_circle("blue",20)
 
 def draw_text(screen,text,pos = (0,0)):
     font = pygame.font.SysFont("Arial", 18)
@@ -111,7 +125,15 @@ def unlock(circle):
 
 x = 0.0
 
-box1 = hitmarker(0,0,"red",100)
+
+
+object_ = hitmarker("RED", 20, 30)
+object_.rect.center = (center)
+hitboxes = pygame.sprite.Group()
+hitboxes.add(object_)
+player_hitbox = pygame.sprite.Group()
+player_hitbox.add(circle2)
+
 while running:
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -122,18 +144,20 @@ while running:
     dt = clock.tick(60) # limits FPS to 60
     #the first epoch the game will render the first line 
     #after the line is rendered go to the next epoch
-
+ 
     screen.fill("black")
-
+   
     keystate = pygame.key.get_just_pressed()
     if keystate[pygame.K_SPACE]:
        unlock(circle2)
 
-    box1.rect.center = (center)
-    box1.update()
-    draw_text(screen,f"Cordinate x: {circle2.a}",(width-350,100))
-    draw_text(screen,f"Cordinate y: {circle2.b}",(width-350,50))
-    circle2.a, circle2.b, x = draw_circle(circle2,x,dt) #one line draw circle function to keep code clean
+   
+   
+    hitboxes.draw(screen)
+    player_hitbox.draw(screen)
+    draw_text(screen,f"Cordinate x: {circle2.rect.x}",(width-350,100))
+    draw_text(screen,f"Cordinate y: {circle2.rect.y}",(width-350,50))
+    x = draw_circle(circle2,x,dt) #one line draw circle function to keep code clean
     # flip() the display to put your work on screen
     pygame.display.flip()
     
