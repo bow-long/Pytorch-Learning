@@ -80,7 +80,7 @@ dt : float
 #acts as a function translator to pygame
 def calculatepos(a,b,color,dt):
    
-    a += dt * 0.5 # is input for the function
+    a += dt * 0.01 # is input for the function
 
     #actual function is here
     if color == "blue":
@@ -123,15 +123,14 @@ class Circle(object):
 def make_circle(color,size):
     circle = Circle(0,height,color,size)
     return circle
+
 #initalize the circles 
 circle1 = make_circle("green",3)
 circle2 = make_circle("blue",3)
 
 
-
-
 #how much we wanna nudge the data the smaller this is the more accurate
-learningrate =0.1
+learningrate =0.01
 #learning time 
 epoch = 100
 

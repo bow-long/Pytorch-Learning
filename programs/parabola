@@ -45,7 +45,7 @@ dt : float
 #acts as a function translator to pygame
 def calculatepos(a,b,m,color,dt):
    
-    a += dt * 0.001 # is input for the function
+    a += dt * 0.01 # is input for the function
 
     #actual function is here
     if color == "blue":
