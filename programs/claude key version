@@ -1,0 +1,183 @@
+import numpy as np
+import pygame
+import math
+import random
+
+pygame.init()
+size = width, height = 1280, 720
+screen = pygame.display.set_mode(size)
+clock = pygame.time.Clock()
+running = True
+
+# Speed in radians per second — positive = counter-clockwise, negative = clockwise
+BASE_SPEED = 1.5
+speed = BASE_SPEED
+
+
+def angle_from_param(t):
+    """Convert a parameter t (radians) to a screen position on the circle."""
+    a = 100 * np.sin(t)
+    b = -100 * np.cos(t)
+    return a + width / 2, b + height / 2
+
+
+def param_to_angle(t):
+    """Normalize t into [-pi, pi] for consistent angle comparison."""
+    return math.atan2(-100 * np.cos(t), 100 * np.sin(t))
+
+
+class Circle(pygame.sprite.Sprite):
+    def __init__(self, color, size):
+        super().__init__()
+        self.color = color
+        self.size = size
+        self.t = 0.0  # parameter along the circle path (radians)
+
+        self.image = pygame.Surface([size, size], pygame.SRCALPHA)
+        pygame.draw.circle(self.image, self.color, (size // 2, size // 2), size // 2)
+        self.rect = self.image.get_rect()
+        self.rect.center = angle_from_param(self.t)
+
+    def update_position(self, dt_seconds, spd):
+        self.t += spd * dt_seconds
+        self.rect.center = angle_from_param(self.t)
+
+
+class HitMarker(pygame.sprite.Sprite):
+    def __init__(self, color, w, h):
+        super().__init__()
+        self.color = color
+        self.t = 0.0  # parameter along the circle path
+
+        self.image = pygame.Surface([w, h], pygame.SRCALPHA)
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+
+    def place_at(self, t):
+        self.t = t
+        self.rect.center = angle_from_param(t)
+
+
+def spawn_hitbox(player_group, existing_group):
+    """Spawn a red square on the circle path, not overlapping player."""
+    marker = HitMarker("red", 15, 15)
+    for _ in range(100):
+        t = random.uniform(0, 2 * math.pi)
+        marker.place_at(t)
+        if not pygame.sprite.spritecollide(marker, player_group, False) and \
+           not pygame.sprite.spritecollide(marker, existing_group, False):
+            break
+    existing_group.add(marker)
+    return marker
+
+
+def angle_diff(a, b):
+    """Signed angular difference from b to a, in [-pi, pi]."""
+    d = (a - b) % (2 * math.pi)
+    if d > math.pi:
+        d -= 2 * math.pi
+    return d
+
+
+def draw_text(surface, text, pos=(0, 0)):
+    font = pygame.font.SysFont("Arial", 18)
+    rendered = font.render(text, True, "white")
+    rect = rendered.get_rect(center=pos)
+    surface.blit(rendered, rect)
+
+
+def draw_circle_path():
+    """Draw the circular path as a guide."""
+    points = []
+    for i in range(361):
+        t = math.radians(i)
+        points.append(angle_from_param(t))
+    pygame.draw.lines(screen, (60, 60, 60), True, points, 1)
+
+
+# --- Init ---
+player = Circle("blue", 20)
+player_group = pygame.sprite.GroupSingle(player)
+
+hitboxes = pygame.sprite.Group()
+box = spawn_hitbox(player_group, hitboxes)
+
+score = 0
+speed = BASE_SPEED  # positive = CCW, negative = CW
+
+
+def reset():
+    global score, speed, box
+    for h in hitboxes:
+        h.kill()
+    hitboxes.empty()
+    player.t = 0.0
+    player.rect.center = angle_from_param(player.t)
+    # Randomize direction
+    direction = random.choice([-1, 1])
+    speed = BASE_SPEED * direction
+    score = 0
+    box = spawn_hitbox(player_group, hitboxes)
+ 
+
+
+reset()
+
+while running:
+    dt_seconds = clock.tick(60) / 1000.0
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    screen.fill("black")
+    draw_circle_path()
+
+    # Update player position
+    player.update_position(dt_seconds, speed)
+
+    # --- Check if player passed the target without pressing space ---
+    # Compute how far ahead the target is in the direction of travel
+    diff = angle_diff(box.t, player.t)  # signed angle from player to target
+
+    if speed > 0:
+        # Moving CCW (increasing t): target is "ahead" if diff > 0
+        # If diff goes negative (< -deadzone), player passed it
+        if diff < -0.15:
+            reset()
+    else:
+        # Moving CW (decreasing t): target is "ahead" if diff < 0
+        # If diff goes positive (> deadzone), player passed it
+        if diff > 0.15:
+            reset()
+
+    # --- Space bar: try to hit the target ---
+    keystate = pygame.key.get_just_pressed()
+    if keystate[pygame.K_SPACE]:
+        if pygame.sprite.spritecollide(player, hitboxes, False):
+            # Hit! Remove target, increase score, speed up
+            box.kill()
+            score += 1
+            speed_boost = score * 0.1
+            if speed > 0:
+                speed = BASE_SPEED + speed_boost
+            else:
+                speed = -(BASE_SPEED + speed_boost)
+            box = spawn_hitbox(player_group, hitboxes)
+        else:
+            # Missed — reset
+            reset()
+
+    hitboxes.draw(screen)
+    player_group.draw(screen)
+
+    # HUD
+    draw_text(screen, f"Score: {score}", (100, 50))
+    draw_text(screen, f"Speed: {speed:.2f} rad/s", (width - 200, 50))
+    dir_label = "Counter-Clockwise" if speed > 0 else "Clockwise"
+    draw_text(screen, f"Direction: {dir_label}", (width - 200, 80))
+    draw_text(screen, "SPACE to tag the red square!", (width // 2, height - 30))
+
+    pygame.display.flip()
+
+pygame.quit()
