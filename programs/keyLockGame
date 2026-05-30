@@ -32,14 +32,12 @@ class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
         self.layer1 = nn.Linear(n_observations, 128)
-        self.layer2 = nn.Linear(128, 128)
         self.layer3 = nn.Linear(128, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
         x = F.relu(self.layer1(x))
-        x = F.sigmoid(self.layer2(x))
         return self.layer3(x)
     
 
@@ -241,8 +239,8 @@ class Circle(pygame.sprite.Sprite):
         
 
         #actual function is here
-        a =  100*np.sin(pos)
-        b =  100*np.cos(pos)
+        a =  100*np.sin( self.position)
+        b =  100*np.cos( self.position)
 
     
         b = -b  # reverse a so that the input can stay bottome left and move properly
@@ -312,12 +310,12 @@ def reset(score,x,hitboxes,dir):
     global speed, generation, circle2
     for hitbox in hitboxes:
         hitbox.kill()
-    x = 0
+    x = 2* math.pi * random.random()
     dir = ((random.choice([-1,1])) )
     speed = BASE_SPEED
     score = 0
     generation += 1
-    circle2.set_position(2)
+
     box = hitbox_spawn(hitmarker("red",15,15),hitboxes,player_hitbox)
     step_reset()
     return score,x,box,dir
