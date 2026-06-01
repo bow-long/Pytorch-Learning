@@ -43,7 +43,8 @@ class DQN(nn.Module):
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x = F.relu(self.layer1(x))
+        x = F.sigmoid(self.layer1(x))
+  
         return self.layer3(x)
     
 
@@ -56,8 +57,8 @@ target_net = DQN(N_OBSERVATIONS, N_ACTIONS)
 
 Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
 
-optimizer = optim.SGD(policy_net.parameters(), lr=1e-4,momentum=0.9)
-scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer=optimizer,gamma=0.99,base_lr=1e-4,max_lr=1e-2)
+optimizer = optim.SGD(policy_net.parameters(), lr=1e-4,momentum=0.8)
+scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer=optimizer,gamma=0.99,base_lr=1e-5,max_lr=1e-3)
 
 memory = ReplayMemory(10000)
 
@@ -465,7 +466,7 @@ if __name__ == '__main__':
         
         draw_circle_path()
 
-        q.put((generation, scheduler.get_last_lr()[0]))
+
 
         x = draw_circle(circle2,x,dt) #one line draw circle function to keep code clean
         # flip() the display to put your work on screen
