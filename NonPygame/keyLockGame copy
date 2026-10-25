@@ -3,13 +3,14 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-import matplotlib as plt
 from collections import namedtuple, deque
 import numpy as np
 import pygame
 import time
 import math
 import random
+import sys
+from pathlib import Path
 
 
 class ReplayMemory(object):
@@ -32,16 +33,14 @@ class DQN(nn.Module):
 
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 32)
-        self.layer2 = nn.Linear(32, 32)
-        self.layer3 = nn.Linear(32, n_actions)
+        self.layer1 = nn.Linear(n_observations, 256)
+        self.layer4 = nn.Linear(256, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
         x = F.relu(self.layer1(x))
-        x = F.relu(self.layer2(x))
-        return self.layer3(x)
+        return self.layer4(x)
     
     
 
@@ -264,7 +263,7 @@ class hitmarker(pygame.sprite.Sprite):
     def __init__(self,color,height,width):
         super().__init__()
         self.color = color
-        self.size = size
+        self.size = (height, width)
         self.position = 0.0
        
         self.image = pygame.Surface([width, height])
@@ -342,7 +341,8 @@ def dist_on_circle(box,circle):
        
         return abs(box.position - circle.position)
     
-state_dict = torch.load('tensor.pt', weights_only=True)
+asset_dir = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
+state_dict = torch.load(asset_dir / "tensor.pt", map_location="cpu", weights_only=True)
 policy_net.load_state_dict(state_dict)
 
 while running:
@@ -422,7 +422,6 @@ while running:
 
 
 pygame.quit()
-
 
 
 
